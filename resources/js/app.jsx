@@ -98,6 +98,9 @@ function EmpresaModal({ empresa, onClose }) {
 function Search() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selected, setSelected] = useState(null);
+  const [empresas, setEmpresas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && setSelected(null);
@@ -105,7 +108,24 @@ function Search() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
-  const filtradas = EMPRESAS.filter((e) =>
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/empresas', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Error al cargar empresas');
+        const data = await res.json();
+        setEmpresas(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setError(e.message || 'Error desconocido');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filtradas = empresas.filter((e) =>
     e.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -123,7 +143,11 @@ function Search() {
       </div>
 
       <div className="bg-white/80 backdrop-blur rounded-2xl shadow-lg ring-1 ring-zinc-200/60 divide-y divide-zinc-200/60">
-        {filtradas.length ? (
+        {loading ? (
+          <p className="p-6 text-gray-500">Cargando…</p>
+        ) : error ? (
+          <p className="p-6 text-red-600">{error}</p>
+        ) : filtradas.length ? (
           filtradas.map((e) => (
             <button
               key={e.id}
@@ -148,12 +172,6 @@ function Search() {
     </main>
   );
 }
-
-const EMPRESAS = [
-  { id: 1, nombre: 'Cliente III EIRL', email: 'cliente3@gmail.com', telefono: '999222999', direccion: 'Dirección de la empresa', descripcion: 'Lorem Ipsum is simply dummy text of the printing industry.', urlfoto: '' },
-  { id: 2, nombre: 'Cliente II SRL', email: 'cliente2@gmail.com', telefono: '988777666', direccion: 'Dirección de la empresa', descripcion: "Lorem Ipsum has been the industry's standard dummy text.", urlfoto: '' },
-  { id: 3, nombre: 'Karina SAC', email: 'karina@gmail.com', telefono: '987111222', direccion: 'Dirección de la empresa', descripcion: 'Lorem Ipsum since the 1500s.', urlfoto: '' },
-];
 
 function App() {
   return (

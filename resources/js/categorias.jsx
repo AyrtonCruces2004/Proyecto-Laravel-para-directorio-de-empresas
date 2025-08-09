@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './bootstrap';
 import '../css/app.css';
@@ -38,6 +38,27 @@ function Hero() {
 }
 
 function App() {
+  const [categorias, setCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/categorias', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Error al cargar categorías');
+        const data = await res.json();
+        setCategorias(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setError(e.message || 'Error desconocido');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -47,6 +68,27 @@ function App() {
             <div className="container mx-auto px-6">
               <h1 className="text-3xl md:text-4xl font-extrabold text-zinc-900 tracking-tight">Categorías</h1>
               <p className="mt-2 text-zinc-600">Explora las categorías disponibles.</p>
+              <div className="mt-6 rounded-xl bg-white ring-1 ring-zinc-200/70 p-4">
+                {loading ? (
+                  <p className="text-gray-500">Cargando…</p>
+                ) : error ? (
+                  <p className="text-red-600">{error}</p>
+                ) : categorias.length ? (
+                  <ul className="grid gap-3 md:grid-cols-3">
+                    {categorias.map((c) => (
+                      <li key={c.id} className="rounded-lg border border-zinc-200 p-4 bg-white">
+                        <div className="text-lg font-semibold">{c.nombre}</div>
+                        <div className="text-zinc-500 text-sm">{c.slug}</div>
+                        {c.descripcion && (
+                          <p className="text-zinc-600 mt-2 text-sm">{c.descripcion}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No hay categorías.</p>
+                )}
+              </div>
             </div>
           </section>
         </main>
