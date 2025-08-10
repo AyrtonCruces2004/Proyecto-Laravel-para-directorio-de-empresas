@@ -1,31 +1,29 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Models\Categoria;
-use App\Models\Empresa;
 
-Route::get('/', fn() => view('welcome'))->name('home');
-Route::get('/categorias', fn() => view('categorias'))->name('categorias');
+Route::get('/', fn () => view('welcome'));
+Route::get('/categorias', fn () => view('categorias'))->name('categorias');
 
-Route::get('/db-check', function () {
-    DB::connection()->getPdo(); // lanza excepción si falla
-    $row = DB::select('SELECT 1 AS ok');
-    return ['status' => 'OK', 'db' => $row[0]->ok];
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// API simples para React
-Route::get('/api/categorias', function () {
-    return Categoria::query()
-        ->orderBy('orden')
-        ->orderBy('id')
-        ->get();
-});
-
-Route::get('/api/empresas', function () {
-    return Empresa::query()
-        ->with(['categoria:id,nombre,slug'])
-        ->orderBy('orden')
-        ->orderBy('id')
-        ->get();
-});
+require __DIR__.'/auth.php';
+    // routes/web.php
+    Route::get('/api/empresas', function () {
+        return \App\Models\Empresa::query()
+            ->with(['categoria:id,nombre,slug'])
+            ->orderBy('orden')->orderBy('id')->get();
+    });
+    Route::get('/api/categorias', function () {
+        return \App\Models\Categoria::query()
+            ->orderBy('orden')->orderBy('id')->get();
+    });
