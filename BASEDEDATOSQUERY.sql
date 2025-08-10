@@ -85,7 +85,7 @@ VALUES
 ('Karina SAC','karina@gmail.com','987111222','Calle Sol 789','Lorem ipsum…', 3, 1);
 select * from empresas
 select * from categorias where orden>1;
-
+select * from users
 insert into dbo.empresas
 (nombre,email,telefono,direccion,descripcion,categoria_id,user_id)
 VALUES
